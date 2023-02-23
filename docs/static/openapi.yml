@@ -71647,6 +71647,11 @@ definitions:
     description: |-
       Version defines the versioning scheme used to negotiate the IBC verison in
       the connection handshake.
+  sdavidson1177.checkers.checkers.MsgCreateGameResponse:
+    type: object
+    properties:
+      gameIndex:
+        type: string
   sdavidson1177.checkers.checkers.MsgCreatePostResponse:
     type: object
   sdavidson1177.checkers.checkers.Params:

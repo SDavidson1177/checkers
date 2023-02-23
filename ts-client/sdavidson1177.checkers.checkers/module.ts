@@ -7,13 +7,20 @@ import { msgTypes } from './registry';
 import { IgniteClient } from "../client"
 import { MissingWalletError } from "../helpers"
 import { Api } from "./rest";
+import { MsgCreateGame } from "./types/checkers/checkers/tx";
 import { MsgCreatePost } from "./types/checkers/checkers/tx";
 
 import { Params as typeParams} from "./types"
 import { StoredGame as typeStoredGame} from "./types"
 import { SystemInfo as typeSystemInfo} from "./types"
 
-export { MsgCreatePost };
+export { MsgCreateGame, MsgCreatePost };
+
+type sendMsgCreateGameParams = {
+  value: MsgCreateGame,
+  fee?: StdFee,
+  memo?: string
+};
 
 type sendMsgCreatePostParams = {
   value: MsgCreatePost,
@@ -21,6 +28,10 @@ type sendMsgCreatePostParams = {
   memo?: string
 };
 
+
+type msgCreateGameParams = {
+  value: MsgCreateGame,
+};
 
 type msgCreatePostParams = {
   value: MsgCreatePost,
@@ -56,6 +67,20 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 
   return {
 		
+		async sendMsgCreateGame({ value, fee, memo }: sendMsgCreateGameParams): Promise<DeliverTxResponse> {
+			if (!signer) {
+					throw new Error('TxClient:sendMsgCreateGame: Unable to sign Tx. Signer is not present.')
+			}
+			try {			
+				const { address } = (await signer.getAccounts())[0]; 
+				const signingClient = await SigningStargateClient.connectWithSigner(addr,signer,{registry, prefix});
+				let msg = this.msgCreateGame({ value: MsgCreateGame.fromPartial(value) })
+				return await signingClient.signAndBroadcast(address, [msg], fee ? fee : defaultFee, memo)
+			} catch (e: any) {
+				throw new Error('TxClient:sendMsgCreateGame: Could not broadcast Tx: '+ e.message)
+			}
+		},
+		
 		async sendMsgCreatePost({ value, fee, memo }: sendMsgCreatePostParams): Promise<DeliverTxResponse> {
 			if (!signer) {
 					throw new Error('TxClient:sendMsgCreatePost: Unable to sign Tx. Signer is not present.')
@@ -70,6 +95,14 @@ export const txClient = ({ signer, prefix, addr }: TxClientOptions = { addr: "ht
 			}
 		},
 		
+		
+		msgCreateGame({ value }: msgCreateGameParams): EncodeObject {
+			try {
+				return { typeUrl: "/sdavidson1177.checkers.checkers.MsgCreateGame", value: MsgCreateGame.fromPartial( value ) }  
+			} catch (e: any) {
+				throw new Error('TxClient:MsgCreateGame: Could not create message: ' + e.message)
+			}
+		},
 		
 		msgCreatePost({ value }: msgCreatePostParams): EncodeObject {
 			try {
